@@ -59,10 +59,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up kubeconfig
+      - name: Install yc CLI and get kubeconfig
         run: |
-          mkdir -p "$HOME/.kube"
-          echo '${{ secrets.KUBECONFIG_B64 }}' | base64 -d > "$HOME/.kube/config"
+          curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash -s -- -i /home/runner/yc -n
+          echo '${{ secrets.YC_SA_KEY_JSON }}' > sa-key.json
+          /home/runner/yc/bin/yc config set service-account-key sa-key.json
+          /home/runner/yc/bin/yc managed-kubernetes cluster get-credentials ${{ secrets.YC_K8S_CLUSTER_ID }} --external --force
+          rm sa-key.json
+          echo "/home/runner/yc/bin" >> "$GITHUB_PATH"
 
       - name: Deploy new image
         run: |

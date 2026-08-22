@@ -122,4 +122,4 @@ Settings → Secrets and variables → Actions. Оба workflow переиспо
 - `YC_CLOUD_ID`, `YC_FOLDER_ID`
 - `TF_STATE_BUCKET`, `TF_STATE_ACCESS_KEY`, `TF_STATE_SECRET_KEY` - из output terraform-bootstrap
 - `YC_REGISTRY_ID` - output registry_id из terraform-infra
-- `KUBECONFIG_B64` - `[Convert]::ToBase64String([IO.File]::ReadAllBytes("$HOME\.kube\config"))`
+- `YC_K8S_CLUSTER_ID` - output k8s_cluster_id из terraform-infra (используется job'ом deploy для получения kubeconfig прямо в CI через yc)
