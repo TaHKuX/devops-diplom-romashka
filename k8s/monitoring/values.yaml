@@ -1,34 +1,83 @@
-# Values для чарта bitnami/kube-prometheus (Prometheus Operator, Prometheus,
-# Alertmanager, kube-state-metrics, node-exporter). Используется вместо
-# prometheus-community/kube-prometheus-stack, потому что образы этого чарта
-# лежат на docker.io, а не на quay.io/ghcr.io.
+# Values для чарта prometheus-community/kube-prometheus-stack.
+# Устанавливает Prometheus Operator, Prometheus, Alertmanager, Grafana,
+# node-exporter и kube-state-metrics одним релизом.
 #
-# helm repo add bitnami https://charts.bitnami.com/bitnami
+# helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 # helm repo update
-# helm upgrade --install kube-prometheus bitnami/kube-prometheus -n monitoring -f k8s/monitoring/values.yaml
+# helm upgrade --install kube-prometheus prometheus-community/kube-prometheus-stack \
+#   -n monitoring -f k8s/monitoring/values.yaml
 #
-# Grafana ставится отдельным чартом (bitnami/kube-prometheus её не включает),
-# см. k8s/monitoring/grafana-values.yaml.
+# Часть образов чарта лежит на quay.io, который недоступен из сети
+# Yandex Cloud. Такие образы перезалиты в свой Container Registry
+# (cr.yandex/crpot29o0cam408r5p0d/mirror/*) и переопределены на него.
+# docker.io и registry.k8s.io образы (grafana, kube-state-metrics) тянутся
+# напрямую, они доступны стабильно.
 
-# Docker Hub недоступен напрямую из сети Yandex Cloud, поэтому все образы
-# тянем через официальное зеркало Yandex Cloud (cr.yandex/mirror вместо
-# docker.io), сохраняя тот же путь до образа.
-global:
-  imageRegistry: cr.yandex/mirror
-  security:
-    allowInsecureImages: true
+grafana:
+  service:
+    type: LoadBalancer
+    port: 80
+  adminPassword: "changeme-please"
+  defaultDashboardsEnabled: true
 
 prometheus:
-  retention: "5d"
-  resources:
-    requests:
-      cpu: 100m
-      memory: 400Mi
-    limits:
-      memory: 800Mi
+  prometheusSpec:
+    retention: 5d
+    image:
+      registry: cr.yandex
+      repository: crpot29o0cam408r5p0d/mirror/prometheus
+      tag: v3.14.0-distroless
+    resources:
+      requests:
+        cpu: 100m
+        memory: 400Mi
+      limits:
+        memory: 800Mi
 
 alertmanager:
-  resources:
-    requests:
-      cpu: 25m
-      memory: 64Mi
+  alertmanagerSpec:
+    image:
+      registry: cr.yandex
+      repository: crpot29o0cam408r5p0d/mirror/alertmanager
+      tag: v0.34.0
+    resources:
+      requests:
+        cpu: 25m
+        memory: 64Mi
+
+nodeExporter:
+  enabled: true
+
+prometheus-node-exporter:
+  image:
+    registry: cr.yandex
+    repository: crpot29o0cam408r5p0d/mirror/node-exporter
+    tag: v1.12.1-distroless
+    distroless: false # чарт иначе сам добавит суффикс -distroless повторно
+
+kubeStateMetrics:
+  enabled: true
+
+prometheusOperator:
+  image:
+    registry: cr.yandex
+    repository: crpot29o0cam408r5p0d/mirror/prometheus-operator
+    tag: v0.93.1
+  prometheusConfigReloader:
+    image:
+      registry: cr.yandex
+      repository: crpot29o0cam408r5p0d/mirror/prometheus-config-reloader
+      tag: v0.93.1
+  # Отключаем admission-webhook: избавляет от зависимости на ghcr.io
+  # (образ certgen), не нужен для базовой работы стека.
+  admissionWebhooks:
+    enabled: false
+
+# В managed k8s нет доступа к control-plane компонентам напрямую,
+# отключаем сборщики метрик, которые все равно не найдут таргеты.
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeEtcd:
+  enabled: false

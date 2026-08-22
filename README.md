@@ -85,19 +85,38 @@ docker run --rm -p 8080:80 test-app
 
 ## 4. Мониторинг
 
-```bash
-Используются чарты bitnami (образы на docker.io), а не prometheus-community/kube-prometheus-stack, потому что часть образов последнего (quay.io, ghcr.io) нестабильно тянется из сети Yandex Cloud.
+quay.io недоступен напрямую из сети Yandex Cloud, поэтому часть образов чарта (prometheus-operator, prometheus, alertmanager, prometheus-config-reloader, node-exporter) заранее перезалита в свой Container Registry под путём `mirror/*` (см. раздел 4a) и переопределена в `k8s/monitoring/values.yaml`. admission-webhook отключен, чтобы не тянуть ghcr.io. Grafana и kube-state-metrics остаются на исходных docker.io/registry.k8s.io - они доступны напрямую.
 
 ```bash
-helm repo add bitnami https://charts.bitnami.com/bitnami
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
 
 kubectl apply -f k8s/monitoring/namespace.yaml
-helm upgrade --install kube-prometheus bitnami/kube-prometheus -n monitoring -f k8s/monitoring/values.yaml
-helm upgrade --install grafana bitnami/grafana -n monitoring -f k8s/monitoring/grafana-values.yaml
+helm upgrade --install kube-prometheus prometheus-community/kube-prometheus-stack -n monitoring -f k8s/monitoring/values.yaml
 
-kubectl -n monitoring get svc grafana
-# EXTERNAL-IP этого сервиса - вход в Grafana на 80 порту, логин admin, пароль см. grafana-values.yaml
+kubectl -n monitoring get svc kube-prometheus-grafana
+# EXTERNAL-IP этого сервиса - вход в Grafana на 80 порту, логин admin, пароль см. values.yaml
+```
+
+## 4a. Перезаливка образов с quay.io в свой registry (один раз, до установки мониторинга)
+
+Нужен Docker Desktop и доступ к quay.io с локальной машины (через VPN, если из РФ напрямую не открывается).
+
+```bash
+yc container registry configure-docker
+
+for img in \
+  "quay.io/prometheus-operator/prometheus-operator:v0.93.1|prometheus-operator" \
+  "quay.io/prometheus-operator/prometheus-config-reloader:v0.93.1|prometheus-config-reloader" \
+  "quay.io/prometheus/prometheus:v3.14.0-distroless|prometheus" \
+  "quay.io/prometheus/alertmanager:v0.34.0|alertmanager" \
+  "quay.io/prometheus/node-exporter:v1.12.1-distroless|node-exporter"
+do
+  src="${img%%|*}"; name="${img##*|}"; tag="${src##*:}"
+  docker pull "$src"
+  docker tag "$src" "cr.yandex/crpot29o0cam408r5p0d/mirror/${name}:${tag}"
+  docker push "cr.yandex/crpot29o0cam408r5p0d/mirror/${name}:${tag}"
+done
 ```
 
 ## 5. Деплой тестового приложения в кластер
