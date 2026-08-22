@@ -12,10 +12,13 @@ terraform {
   # -backend-config="bucket=<state_bucket_name>" при terraform init,
   # либо через backend.hcl (см. backend.hcl.example).
   backend "s3" {
-    endpoint = "storage.yandexcloud.net"
-    region   = "ru-central1"
-    key      = "infra/terraform.tfstate"
+    endpoints = {
+      s3 = "https://storage.yandexcloud.net"
+    }
+    region = "ru-central1"
+    key    = "infra/terraform.tfstate"
 
+    use_path_style               = true
     skip_region_validation      = true
     skip_credentials_validation = true
     skip_requesting_account_id  = true

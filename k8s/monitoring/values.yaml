@@ -1,46 +1,27 @@
-# Values для чарта prometheus-community/kube-prometheus-stack.
-# Устанавливает Prometheus Operator, Prometheus, Alertmanager,
-# Grafana, node-exporter и kube-state-metrics одним релизом.
+# Values для чарта bitnami/kube-prometheus (Prometheus Operator, Prometheus,
+# Alertmanager, kube-state-metrics, node-exporter). Используется вместо
+# prometheus-community/kube-prometheus-stack, потому что образы этого чарта
+# лежат на docker.io, а не на quay.io/ghcr.io, которые нестабильно доступны
+# из сети Yandex Cloud.
 #
-# helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-# helm upgrade --install kube-prometheus prometheus-community/kube-prometheus-stack \
-#   -n monitoring -f k8s/monitoring/values.yaml
-
-grafana:
-  service:
-    type: LoadBalancer
-    port: 80
-  adminPassword: "changeme-please"
-  defaultDashboardsEnabled: true
+# helm repo add bitnami https://charts.bitnami.com/bitnami
+# helm repo update
+# helm upgrade --install kube-prometheus bitnami/kube-prometheus -n monitoring -f k8s/monitoring/values.yaml
+#
+# Grafana ставится отдельным чартом (bitnami/kube-prometheus её не включает),
+# см. k8s/monitoring/grafana-values.yaml.
 
 prometheus:
-  prometheusSpec:
-    retention: 5d
-    resources:
-      requests:
-        cpu: 100m
-        memory: 400Mi
-      limits:
-        memory: 800Mi
+  retention: "5d"
+  resources:
+    requests:
+      cpu: 100m
+      memory: 400Mi
+    limits:
+      memory: 800Mi
 
 alertmanager:
-  alertmanagerSpec:
-    resources:
-      requests:
-        cpu: 25m
-        memory: 64Mi
-
-nodeExporter:
-  enabled: true
-
-kubeStateMetrics:
-  enabled: true
-
-# В managed k8s нет доступа к control-plane компонентам напрямую,
-# отключаем сборщики метрик, которые все равно не найдут таргеты.
-kubeControllerManager:
-  enabled: false
-kubeScheduler:
-  enabled: false
-kubeEtcd:
-  enabled: false
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi

@@ -19,7 +19,6 @@ locals {
   ]
   k8s_node_roles = [
     "container-registry.images.puller",
-    "k8s.nodes.agent",
   ]
 }
 
@@ -43,8 +42,6 @@ resource "yandex_kubernetes_cluster" "main" {
   network_id = yandex_vpc_network.main.id
 
   master {
-    version = "1.28"
-
     regional {
       region = "ru-central1"
 
@@ -76,7 +73,6 @@ resource "yandex_kubernetes_cluster" "main" {
 resource "yandex_kubernetes_node_group" "main" {
   cluster_id = yandex_kubernetes_cluster.main.id
   name       = "${var.prefix}-node-group"
-  version    = "1.28"
 
   instance_template {
     platform_id = "standard-v3"

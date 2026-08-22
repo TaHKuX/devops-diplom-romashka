@@ -43,4 +43,8 @@ resource "yandex_storage_bucket" "terraform_state" {
   versioning {
     enabled = true
   }
+
+  # Явная зависимость от роли storage.admin: без нее бакет иногда пытается
+  # создаться раньше, чем роль реально применится, и падает с AccessDenied.
+  depends_on = [yandex_resourcemanager_folder_iam_member.terraform_sa_roles]
 }

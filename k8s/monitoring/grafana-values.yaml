@@ -1,0 +1,22 @@
+# Values для чарта bitnami/grafana (образ на docker.io).
+#
+# helm upgrade --install grafana bitnami/grafana -n monitoring -f k8s/monitoring/grafana-values.yaml
+
+service:
+  type: LoadBalancer
+  ports:
+    grafana: 80
+
+admin:
+  user: admin
+  password: "changeme-please"
+
+datasources:
+  secretDefinition:
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        url: http://kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
+        access: proxy
+        isDefault: true

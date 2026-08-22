@@ -86,14 +86,18 @@ docker run --rm -p 8080:80 test-app
 ## 4. Мониторинг
 
 ```bash
-helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+Используются чарты bitnami (образы на docker.io), а не prometheus-community/kube-prometheus-stack, потому что часть образов последнего (quay.io, ghcr.io) нестабильно тянется из сети Yandex Cloud.
+
+```bash
+helm repo add bitnami https://charts.bitnami.com/bitnami
 helm repo update
 
 kubectl apply -f k8s/monitoring/namespace.yaml
-helm upgrade --install kube-prometheus prometheus-community/kube-prometheus-stack -n monitoring -f k8s/monitoring/values.yaml
+helm upgrade --install kube-prometheus bitnami/kube-prometheus -n monitoring -f k8s/monitoring/values.yaml
+helm upgrade --install grafana bitnami/grafana -n monitoring -f k8s/monitoring/grafana-values.yaml
 
-kubectl -n monitoring get svc kube-prometheus-grafana
-# EXTERNAL-IP этого сервиса - вход в Grafana на 80 порту, логин admin, пароль см. values.yaml
+kubectl -n monitoring get svc grafana
+# EXTERNAL-IP этого сервиса - вход в Grafana на 80 порту, логин admin, пароль см. grafana-values.yaml
 ```
 
 ## 5. Деплой тестового приложения в кластер
