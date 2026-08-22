@@ -133,21 +133,22 @@ kubectl -n app get svc test-app
 
 ## 6. Секреты для GitHub Actions
 
-Settings, Secrets and variables, Actions.
+Settings, Secrets and variables, Actions. Оба workflow (terraform.yml и app-docker-build.yml) лежат в одном репозитории и переиспользуют один ключ сервисного аккаунта terraform-sa (у него уже есть права и на инфраструктуру, и на container-registry).
 
-Для репозитория с terraform-infra (или монорепо):
+Получить ключ (id сервисного аккаунта - вывод terraform-bootstrap output service_account_id):
+```bash
+yc iam key create --service-account-id <service_account_id> --output sa-key.json
+```
 
-- YC_TOKEN - `yc iam create-token` или ключ сервисного аккаунта
+Секреты:
+
+- YC_SA_KEY_JSON - содержимое sa-key.json целиком
 - YC_CLOUD_ID - cloud_id
 - YC_FOLDER_ID - folder_id
 - TF_STATE_BUCKET - имя бакета из шага 1
 - TF_STATE_ACCESS_KEY - access_key из шага 1
 - TF_STATE_SECRET_KEY - secret_key из шага 1
-
-Для репозитория с app:
-
 - YC_REGISTRY_ID - output registry_id из terraform-infra
-- YC_SA_KEY_JSON - содержимое файла ключа: `yc iam key create --service-account-id <puller_sa_id> --output key.json`
 - KUBECONFIG_B64 - `cat ~/.kube/config | base64 -w0`
 
 ## 7. Что показывать на защите

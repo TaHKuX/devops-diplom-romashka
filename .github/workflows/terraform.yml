@@ -17,7 +17,6 @@ defaults:
 env:
   AWS_ACCESS_KEY_ID: ${{ secrets.TF_STATE_ACCESS_KEY }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.TF_STATE_SECRET_KEY }}
-  TF_VAR_yc_token: ${{ secrets.YC_TOKEN }}
   TF_VAR_yc_cloud_id: ${{ secrets.YC_CLOUD_ID }}
   TF_VAR_yc_folder_id: ${{ secrets.YC_FOLDER_ID }}
 
@@ -29,7 +28,19 @@ jobs:
 
       - uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "1.7.5"
+          terraform_version: "1.9.8"
+
+      # YC_TOKEN секретом не храним - OAuth/IAM токен живёт 12 часов.
+      # Вместо этого CI сам получает свежий IAM-токен по ключу сервисного
+      # аккаунта (YC_SA_KEY_JSON) на каждый запуск.
+      - name: Install yc CLI and get fresh IAM token
+        run: |
+          curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash -s -- -i /home/runner/yc -n
+          echo "/home/runner/yc/bin" >> "$GITHUB_PATH"
+          echo '${{ secrets.YC_SA_KEY_JSON }}' > sa-key.json
+          /home/runner/yc/bin/yc config set service-account-key sa-key.json
+          echo "TF_VAR_yc_token=$(/home/runner/yc/bin/yc iam create-token)" >> "$GITHUB_ENV"
+          rm sa-key.json
 
       - name: Terraform Init
         run: terraform init -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}"
