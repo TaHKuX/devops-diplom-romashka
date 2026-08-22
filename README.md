@@ -1,4 +1,4 @@
-# Дипломный практикум: DevOps в Yandex Cloud
+# Диплом Танких
 
 Отчёт по дипломному заданию. Ниже — что сделано на каждом этапе, какие решения принимались и почему, плюс ссылки/скрины как подтверждение.
 
@@ -27,7 +27,8 @@ k8s/app/                манифесты Deployment/Service тестового
 
 `terraform plan`/`apply`/`destroy` в обеих папках отрабатывают без ручных действий - state в S3, креды через переменные окружения.
 
-Скрин применения с нуля: `docs/screenshots/terraform-apply.png`
+<img width="996" height="681" alt="image" src="https://github.com/user-attachments/assets/f113edc4-729b-486c-a2ca-0bf78c4bf27c" />
+
 
 ## 2. Kubernetes кластер
 
@@ -38,9 +39,11 @@ yc managed-kubernetes cluster get-credentials cat39fdbe2lr0h0mbr94 --external --
 kubectl get pods --all-namespaces
 ```
 
-отрабатывает без ошибок: `docs/screenshots/kubectl-pods.png`
+<img width="865" height="419" alt="image" src="https://github.com/user-attachments/assets/571633c6-c4f3-49d1-b517-3cb466002fbf" />
 
-Прерываемые ВМ для worker-нод, как требует задание: `docs/screenshots/preemptible-nodes.png`
+Прерываемые ВМ:
+<img width="1280" height="240" alt="image" src="https://github.com/user-attachments/assets/85893f2d-f3ea-48f3-8729-4863b9232231" />
+
 
 ## 3. Тестовое приложение
 
@@ -48,24 +51,23 @@ kubectl get pods --all-namespaces
 
 Registry - Yandex Container Registry, создан терраформом вместе с остальной инфрой (`terraform-infra/registry.tf`).
 
-Образ: `cr.yandex/crpot29o0cam408r5p0d/test-app:latest`
-
 ## 4. Мониторинг и деплой приложения
 
 Стек - `prometheus-community/kube-prometheus-stack` (Prometheus Operator, Prometheus, Alertmanager, Grafana, kube-state-metrics, node-exporter) через helm, values в `k8s/monitoring/values.yaml`.
 
-Отдельная проблема, с которой пришлось разбираться: часть образов чарта лежит на `quay.io`, который недоступен из сети Yandex Cloud (таймауты на всех нодах, не связано с конкретной зоной или конкретным registry - позже выяснилось, что и часть образов с `registry.k8s.io` тоже не тянется). Пробовали официальное зеркало Yandex `cr.yandex/mirror` - оно проксирует только официальные (library) образы Docker Hub, `bitnami/*` через него не идёт. Пробовали целиком перейти на bitnami-чарты - у них тоже нет полного набора компонентов (нет Grafana в `bitnami/kube-prometheus`). В итоге проблемные образы (prometheus-operator, prometheus, alertmanager, prometheus-config-reloader, node-exporter, kube-state-metrics) вручную перезалиты в свой Container Registry под `cr.yandex/crpot29o0cam408r5p0d/mirror/*` и подставлены через `image.registry`/`image.repository` в values. admission-webhook отключен - тянул ещё один недоступный образ с ghcr.io и не нужен для базовой работы.
+Отдельная проблема, с которой пришлось разбираться - часть образов чарта лежит на `quay.io`, который недоступен из сети УС (таймауты на всех нодах, не связано с конкретной зоной или конкретным registry - позже выяснилось, что и часть образов с `registry.k8s.io` тоже не тянется). Пробовал официальное зеркало Yandex `cr.yandex/mirror` - оно проксирует только официальные (library) образы Docker Hub, `bitnami/*` через него не идет. Пробовал целиком перейти на bitnami-чарты - у них тоже нет полного набора компонентов (нет Grafana в `bitnami/kube-prometheus`). В итоге проблемные образы (prometheus-operator, prometheus, alertmanager, prometheus-config-reloader, node-exporter, kube-state-metrics) вручную перезалиты в свой Container Registry под `cr.yandex/crpot29o0cam408r5p0d/mirror/*` и подставлены через `image.registry`/`image.repository` в values. admission-webhook отключен - тянул ещё один недоступный образ с ghcr.io и не нужен для базовой работы.
 
 Grafana:
 - `http://158.160.202.106` (LoadBalancer, порт 80)
 - логин `admin`, пароль - см. `prometheus.prometheusSpec` / `grafana.adminPassword` в `k8s/monitoring/values.yaml` (сменить после первого входа)
+<img width="1886" height="666" alt="image" src="https://github.com/user-attachments/assets/65c5515f-1466-4d6d-98f4-1fe3531d40ca" />
 
 Тестовое приложение:
 - `http://158.160.197.203` (LoadBalancer, порт 80)
+<img width="583" height="222" alt="image" src="https://github.com/user-attachments/assets/b9a44fbe-3aaf-4c6a-b7e6-3847a2d49ae6" />
 
 Важный нюанс по сети: LoadBalancer в managed k8s шлёт трафик не на порт 80 самой ноды, а на её NodePort (диапазон 30000-32767) - это нужно явно открыть в security group (`terraform-infra/network.tf`), иначе снаружи будет просто таймаут при живых и здоровых подах.
 
-Скрины: `docs/screenshots/grafana-dashboard.png`, `docs/screenshots/test-app.png`
 
 ## 5. CI/CD: terraform pipeline
 
@@ -73,7 +75,6 @@ Grafana:
 
 Аутентификация: секрет `YC_SA_KEY_JSON` (ключ `terraform-sa`) - workflow сам получает свежий IAM-токен на каждый запуск (`yc iam create-token`), долгоживущий OAuth-токен в секретах не хранится.
 
-История прогонов: https://github.com/TaHKuX/devops-diplom-romashka/actions/workflows/terraform.yml
 
 ## 6. CI/CD: сборка и деплой приложения
 
@@ -81,8 +82,8 @@ Grafana:
 
 - любой коммит в main, затрагивающий `app/` - сборка образа и пуш с тегом `sha` + `latest`
 - тег `vX.Y.Z` - сборка, пуш с этим тегом и деплой в кластер (`kubectl set image`)
-
-История прогонов: https://github.com/TaHKuX/devops-diplom-romashka/actions/workflows/app-docker-build.yml
+https://github.com/TaHKuX/devops-diplom-romashka/actions
+<img width="1333" height="592" alt="image" src="https://github.com/user-attachments/assets/3bd092f9-826e-4dd0-a654-8dfa80702752" />
 
 ## Как поднять с нуля
 
