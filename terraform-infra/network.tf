@@ -30,6 +30,14 @@ resource "yandex_vpc_security_group" "k8s_main" {
   }
 
   ingress {
+    protocol       = "TCP"
+    description    = "NodePort диапазон: сюда Network Load Balancer реально шлёт трафик Service type=LoadBalancer"
+    from_port      = 30000
+    to_port        = 32767
+    v4_cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
     protocol       = "ANY"
     description    = "Внутренний трафик между нодами/подами"
     predefined_target = "self_security_group"
