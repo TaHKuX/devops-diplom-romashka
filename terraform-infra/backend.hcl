@@ -1,3 +1,0 @@
-# Скопируйте в backend.hcl и подставьте имя бакета из output terraform-bootstrap.
-# Использование: terraform init -backend-config=backend.hcl
-bucket = "rtankih-tf-state"
