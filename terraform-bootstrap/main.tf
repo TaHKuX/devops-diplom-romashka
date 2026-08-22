@@ -17,6 +17,10 @@ locals {
     "container-registry.admin",
     "storage.admin",
     "iam.serviceAccounts.user",
+    # Нужна, чтобы terraform-sa мог сам выдавать роли другим сервисным
+    # аккаунтам (k8s.clusters.agent и т.д.) на этом folder. Область
+    # действия - только этот folder, не весь cloud.
+    "resource-manager.admin",
   ]
 }
 
