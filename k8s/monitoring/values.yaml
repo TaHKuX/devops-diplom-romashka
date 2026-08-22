@@ -1,8 +1,7 @@
 # Values для чарта bitnami/kube-prometheus (Prometheus Operator, Prometheus,
 # Alertmanager, kube-state-metrics, node-exporter). Используется вместо
 # prometheus-community/kube-prometheus-stack, потому что образы этого чарта
-# лежат на docker.io, а не на quay.io/ghcr.io, которые нестабильно доступны
-# из сети Yandex Cloud.
+# лежат на docker.io, а не на quay.io/ghcr.io.
 #
 # helm repo add bitnami https://charts.bitnami.com/bitnami
 # helm repo update
@@ -10,6 +9,14 @@
 #
 # Grafana ставится отдельным чартом (bitnami/kube-prometheus её не включает),
 # см. k8s/monitoring/grafana-values.yaml.
+
+# Docker Hub недоступен напрямую из сети Yandex Cloud, поэтому все образы
+# тянем через официальное зеркало Yandex Cloud (cr.yandex/mirror вместо
+# docker.io), сохраняя тот же путь до образа.
+global:
+  imageRegistry: cr.yandex/mirror
+  security:
+    allowInsecureImages: true
 
 prometheus:
   retention: "5d"
