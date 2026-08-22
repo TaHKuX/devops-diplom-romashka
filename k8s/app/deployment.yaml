@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: test-app
-          image: cr.yandex/REPLACE_WITH_REGISTRY_ID/test-app:latest
+          image: cr.yandex/crpot29o0cam408r5p0d/test-app:latest
           ports:
             - containerPort: 80
           readinessProbe:
