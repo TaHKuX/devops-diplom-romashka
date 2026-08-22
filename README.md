@@ -38,7 +38,9 @@ yc managed-kubernetes cluster get-credentials cat39fdbe2lr0h0mbr94 --external --
 kubectl get pods --all-namespaces
 ```
 
-отрабатывает без ошибок.
+отрабатывает без ошибок: `docs/screenshots/kubectl-pods.png`
+
+Прерываемые ВМ для worker-нод, как требует задание: `docs/screenshots/preemptible-nodes.png`
 
 ## 3. Тестовое приложение
 
