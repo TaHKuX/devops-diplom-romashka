@@ -160,3 +160,39 @@ yc iam key create --service-account-id <service_account_id> --output sa-key.json
 5. Grafana по внешнему IP на 80 порту с дашбордами кластера.
 6. Тестовое приложение по внешнему IP на 80 порту.
 7. Скриншоты сборки и деплоя app-docker-build.yml при коммите и при создании тега vX.Y.Z.
+
+## Скриншоты и ссылки
+
+### Terraform - создание инфраструктуры с нуля
+
+![terraform apply](docs/screenshots/terraform-apply.png)
+
+### CI/CD - terraform pipeline (GitHub Actions)
+
+![terraform pipeline](docs/screenshots/terraform-pipeline.png)
+
+### Kubernetes кластер
+
+![kubectl get pods](docs/screenshots/kubectl-pods.png)
+
+### Тестовое приложение
+
+Образ: `cr.yandex/crpot29o0cam408r5p0d/test-app:latest`
+
+Ссылка: http://158.160.197.203
+
+![test app](docs/screenshots/test-app.png)
+
+### Grafana
+
+Ссылка: http://158.160.202.106
+
+Логин: `admin`, пароль см. в `k8s/monitoring/values.yaml`
+
+![grafana dashboard](docs/screenshots/grafana-dashboard.png)
+
+### CI/CD - сборка и деплой приложения (GitHub Actions)
+
+![app pipeline commit](docs/screenshots/app-pipeline-commit.png)
+
+![app pipeline tag](docs/screenshots/app-pipeline-tag.png)
