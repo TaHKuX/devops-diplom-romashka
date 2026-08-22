@@ -36,8 +36,8 @@ nodeExporter:
 kubeStateMetrics:
   enabled: true
 
-# В managed k8s нет доступа к control-plane компонентам напрямую —
-# отключаем сборщики метрик, которые всё равно не найдут таргеты.
+# В managed k8s нет доступа к control-plane компонентам напрямую,
+# отключаем сборщики метрик, которые все равно не найдут таргеты.
 kubeControllerManager:
   enabled: false
 kubeScheduler:

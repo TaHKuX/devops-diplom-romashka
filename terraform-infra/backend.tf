@@ -8,10 +8,9 @@ terraform {
     }
   }
 
-  # bucket намеренно не задан здесь (partial configuration) — передаётся через
-  # -backend-config="bucket=<state_bucket_name>" при `terraform init`,
-  # либо через backend.hcl (см. backend.hcl.example). Значение берётся из
-  # output state_bucket_name конфигурации terraform-bootstrap.
+  # bucket намеренно не задан здесь (partial configuration), передается через
+  # -backend-config="bucket=<state_bucket_name>" при terraform init,
+  # либо через backend.hcl (см. backend.hcl.example).
   backend "s3" {
     endpoint = "storage.yandexcloud.net"
     region   = "ru-central1"

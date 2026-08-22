@@ -10,7 +10,7 @@ variable "yc_cloud_id" {
 }
 
 variable "yc_folder_id" {
-  description = "ID каталога (folder), в котором создаётся инфраструктура"
+  description = "ID каталога (folder), в котором создается инфраструктура"
   type        = string
 }
 

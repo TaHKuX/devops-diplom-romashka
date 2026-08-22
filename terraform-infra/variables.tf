@@ -18,13 +18,13 @@ variable "yc_zone" {
 }
 
 variable "prefix" {
-  description = "Префикс для имён ресурсов"
+  description = "Префикс для имен ресурсов"
   type        = string
-  default     = "diplom"
+  default     = "rtankih"
 }
 
 variable "zones" {
-  description = "Зоны доступности для подсетей / нод кластера"
+  description = "Зоны доступности для подсетей и нод кластера"
   type        = list(string)
   default     = ["ru-central1-a", "ru-central1-b", "ru-central1-d"]
 }

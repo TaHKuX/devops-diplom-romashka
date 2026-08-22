@@ -3,7 +3,7 @@
 # на весь каталог.
 resource "yandex_iam_service_account" "terraform" {
   name        = var.service_account_name
-  description = "Service account used by Terraform to manage infra (diploma project)"
+  description = "Service account used by Terraform to manage infra"
   folder_id   = var.yc_folder_id
 }
 
@@ -27,7 +27,7 @@ resource "yandex_resourcemanager_folder_iam_member" "terraform_sa_roles" {
   member    = "serviceAccount:${yandex_iam_service_account.terraform.id}"
 }
 
-# Статический ключ доступа (HMAC) сервисного аккаунта — используется как
+# Статический ключ доступа (HMAC) сервисного аккаунта, используется как
 # access/secret key для S3-совместимого backend'а Terraform (Object Storage).
 resource "yandex_iam_service_account_static_access_key" "terraform_sa_key" {
   service_account_id = yandex_iam_service_account.terraform.id

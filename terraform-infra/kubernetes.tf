@@ -37,9 +37,7 @@ resource "yandex_resourcemanager_folder_iam_member" "k8s_node_roles" {
   member    = "serviceAccount:${yandex_iam_service_account.k8s_node.id}"
 }
 
-# Зональный (не отказоустойчивый) мастер — экономичный вариант для дипломного
-# бюджета, как рекомендовано заданием. Ноды при этом размещаются в разных
-# зонах доступности через node group ниже.
+# Региональный мастер, ноды в 3 подсетях (по заданию для managed k8s).
 resource "yandex_kubernetes_cluster" "main" {
   name       = "${var.prefix}-k8s"
   network_id = yandex_vpc_network.main.id
@@ -47,9 +45,16 @@ resource "yandex_kubernetes_cluster" "main" {
   master {
     version = "1.28"
 
-    zonal {
-      zone      = var.zones[0]
-      subnet_id = yandex_vpc_subnet.subnets[var.zones[0]].id
+    regional {
+      region = "ru-central1"
+
+      dynamic "location" {
+        for_each = var.zones
+        content {
+          zone      = location.value
+          subnet_id = yandex_vpc_subnet.subnets[location.value].id
+        }
+      }
     }
 
     public_ip = true
