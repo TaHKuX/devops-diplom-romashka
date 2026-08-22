@@ -65,7 +65,7 @@ Grafana:
 
 Важный нюанс по сети: LoadBalancer в managed k8s шлёт трафик не на порт 80 самой ноды, а на её NodePort (диапазон 30000-32767) - это нужно явно открыть в security group (`terraform-infra/network.tf`), иначе снаружи будет просто таймаут при живых и здоровых подах.
 
-Скрины: `docs/screenshots/kubectl-pods.png`, `docs/screenshots/grafana-dashboard.png`, `docs/screenshots/test-app.png`
+Скрины: `docs/screenshots/grafana-dashboard.png`, `docs/screenshots/test-app.png`
 
 ## 5. CI/CD: terraform pipeline
 
@@ -73,7 +73,7 @@ Grafana:
 
 Аутентификация: секрет `YC_SA_KEY_JSON` (ключ `terraform-sa`) - workflow сам получает свежий IAM-токен на каждый запуск (`yc iam create-token`), долгоживущий OAuth-токен в секретах не хранится.
 
-Скрин прогона: `docs/screenshots/terraform-pipeline.png`
+История прогонов: https://github.com/TaHKuX/devops-diplom-romashka/actions/workflows/terraform.yml
 
 ## 6. CI/CD: сборка и деплой приложения
 
@@ -82,7 +82,7 @@ Grafana:
 - любой коммит в main, затрагивающий `app/` - сборка образа и пуш с тегом `sha` + `latest`
 - тег `vX.Y.Z` - сборка, пуш с этим тегом и деплой в кластер (`kubectl set image`)
 
-Скрины: `docs/screenshots/app-pipeline-commit.png`, `docs/screenshots/app-pipeline-tag.png`
+История прогонов: https://github.com/TaHKuX/devops-diplom-romashka/actions/workflows/app-docker-build.yml
 
 ## Как поднять с нуля
 
