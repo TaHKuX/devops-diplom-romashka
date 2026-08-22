@@ -1,0 +1,68 @@
+name: Build and deploy test app
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*.*.*"]
+
+env:
+  REGISTRY: cr.yandex
+  REGISTRY_ID: ${{ secrets.YC_REGISTRY_ID }}
+  IMAGE_NAME: test-app
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve image tag
+        id: meta
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            echo "tag=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${GITHUB_SHA::8}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Login to Yandex Container Registry
+        run: |
+          echo '${{ secrets.YC_SA_KEY_JSON }}' | docker login \
+            --username json_key --password-stdin ${{ env.REGISTRY }}
+
+      - name: Build image
+        run: |
+          docker build -t ${{ env.REGISTRY }}/${{ env.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.tag }} ./app
+
+      - name: Push image (commit/tag)
+        run: |
+          docker push ${{ env.REGISTRY }}/${{ env.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.tag }}
+
+      - name: Also push :latest on main
+        if: github.ref == 'refs/heads/main'
+        run: |
+          docker tag ${{ env.REGISTRY }}/${{ env.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.tag }} \
+            ${{ env.REGISTRY }}/${{ env.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest
+          docker push ${{ env.REGISTRY }}/${{ env.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest
+
+  deploy:
+    needs: build-and-push
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up kubeconfig
+        run: |
+          mkdir -p "$HOME/.kube"
+          echo '${{ secrets.KUBECONFIG_B64 }}' | base64 -d > "$HOME/.kube/config"
+
+      - name: Deploy new image
+        run: |
+          kubectl -n app set image deployment/test-app \
+            test-app=${{ env.REGISTRY }}/${{ env.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.image_tag }}
+          kubectl -n app rollout status deployment/test-app --timeout=120s

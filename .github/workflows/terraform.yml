@@ -1,0 +1,48 @@
+name: Terraform infra pipeline
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "terraform-infra/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - "terraform-infra/**"
+
+defaults:
+  run:
+    working-directory: terraform-infra
+
+env:
+  AWS_ACCESS_KEY_ID: ${{ secrets.TF_STATE_ACCESS_KEY }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.TF_STATE_SECRET_KEY }}
+  TF_VAR_yc_token: ${{ secrets.YC_TOKEN }}
+  TF_VAR_yc_cloud_id: ${{ secrets.YC_CLOUD_ID }}
+  TF_VAR_yc_folder_id: ${{ secrets.YC_FOLDER_ID }}
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.7.5"
+
+      - name: Terraform Init
+        run: terraform init -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}"
+
+      - name: Terraform Fmt Check
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
+
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: terraform apply -auto-approve tfplan

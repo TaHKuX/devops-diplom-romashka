@@ -1,0 +1,7 @@
+# Скопируйте в terraform.tfvars и заполните своими значениями.
+# terraform.tfvars НЕ коммитить (уже добавлен в .gitignore).
+
+yc_cloud_id  = "b1g..."
+yc_folder_id = "b1g43km07u2h7cdiscsm"
+yc_zone      = "ru-central1-a"
+prefix       = "diplom"
