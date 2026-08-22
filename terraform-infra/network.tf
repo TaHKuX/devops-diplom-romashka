@@ -39,19 +39,19 @@ resource "yandex_vpc_security_group" "k8s_main" {
   }
 
   ingress {
-    protocol       = "ANY"
-    description    = "Внутренний трафик между нодами/подами"
+    protocol          = "ANY"
+    description       = "Внутренний трафик между нодами/подами"
     predefined_target = "self_security_group"
-    from_port      = 0
-    to_port        = 65535
+    from_port         = 0
+    to_port           = 65535
   }
 
   ingress {
     protocol          = "ANY"
-    description        = "Балансировщики нагрузки Yandex Cloud"
-    predefined_target  = "loadbalancer_healthchecks"
-    from_port           = 0
-    to_port             = 65535
+    description       = "Балансировщики нагрузки Yandex Cloud"
+    predefined_target = "loadbalancer_healthchecks"
+    from_port         = 0
+    to_port           = 65535
   }
 
   egress {

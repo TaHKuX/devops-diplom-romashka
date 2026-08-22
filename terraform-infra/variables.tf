@@ -32,8 +32,8 @@ variable "zones" {
 variable "node_resources" {
   description = "Ресурсы для worker-нод (минимально достаточные, экономим бюджет)"
   type = object({
-    cores  = number
-    memory = number
+    cores         = number
+    memory        = number
     core_fraction = number
   })
   default = {

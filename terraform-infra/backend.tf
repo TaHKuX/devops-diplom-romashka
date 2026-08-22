@@ -18,12 +18,12 @@ terraform {
     region = "ru-central1"
     key    = "infra/terraform.tfstate"
 
-    use_path_style               = true
+    use_path_style              = true
     skip_region_validation      = true
     skip_credentials_validation = true
     skip_requesting_account_id  = true
-    skip_s3_checksum             = true
-    skip_metadata_api_check      = true
+    skip_s3_checksum            = true
+    skip_metadata_api_check     = true
 
     # access_key / secret_key передаются через переменные окружения
     # AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY (из output бутстрапа),
