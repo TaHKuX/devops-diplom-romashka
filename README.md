@@ -1,6 +1,6 @@
 # Диплом Танких
 
-Отчёт по дипломному заданию. Ниже — что сделано на каждом этапе, какие решения принимались и почему, плюс ссылки/скрины как подтверждение.
+Отчет по дипломному заданию. Ниже - что сделано на каждом этапе, какие решения принимались и почему, плюс ссылки/скрины как подтверждение.
 
 Структура репозитория:
 
@@ -17,13 +17,13 @@ k8s/app/                манифесты Deployment/Service тестового
 
 Аккаунт в Yandex Cloud, folder `b1g43km07u2h7cdiscsm`.
 
-Сначала подняли `terraform-bootstrap` - отдельная конфигурация с локальным state (она создаёт сам бакет, поэтому не может хранить свой state в нём же). Создаёт:
+Сначала поднял `terraform-bootstrap` - отдельная конфигурация с локальным state (она создает сам бакет, поэтому не может хранить свой state в нем же). Создает:
 
 - сервисный аккаунт `terraform-sa` с точечным набором ролей (`vpc.admin`, `compute.admin`, `k8s.admin`, `container-registry.admin`, `storage.admin`, `iam.serviceAccounts.user`) - без editor/admin на весь каталог
 - статический ключ доступа для S3
 - бакет `rtankih-tf-state` (versioning включен) под state основной конфигурации
 
-Дальше `terraform-infra` использует этот бакет как S3-backend и создаёт VPC с тремя подсетями (по одной на зону: a/b/d), security group, managed Kubernetes кластер и Container Registry.
+Дальше `terraform-infra` использует этот бакет как S3-backend и создает VPC с тремя подсетями (по одной на зону: a/b/d), security group, managed Kubernetes кластер и Container Registry.
 
 `terraform plan`/`apply`/`destroy` в обеих папках отрабатывают без ручных действий - state в S3, креды через переменные окружения.
 
@@ -32,7 +32,7 @@ k8s/app/                манифесты Deployment/Service тестового
 
 ## 2. Kubernetes кластер
 
-Выбрали Managed Service for Kubernetes (альтернативный вариант из задания, без Kubespray). По заданию для managed k8s нужен региональный мастер с размещением нод в 3 подсетях - так и сделано (`yandex_kubernetes_cluster.main`, блок `master.regional` с location на каждую зону). Node group - 3 ноды, прерываемые (preemptible), минимальные ресурсы (2 vCPU, 20% core fraction, 2GB) - экономим бюджет купона, как и просили в задании.
+Выбрал Managed Service for Kubernetes (альтернативный вариант из задания, без Kubespray). По заданию для managed k8s нужен региональный мастер с размещением нод в 3 подсетях - так и сделано (`yandex_kubernetes_cluster.main`, блок `master.regional` с location на каждую зону). Node group - 3 ноды, прерываемые (preemptible), минимальные ресурсы (2 vCPU, 20% core fraction, 2GB) - чтобы сэкономить бюджет купона, как и просили в задании.
 
 ```
 yc managed-kubernetes cluster get-credentials cat39fdbe2lr0h0mbr94 --external --force
@@ -55,7 +55,7 @@ Registry - Yandex Container Registry, создан терраформом вме
 
 Стек - `prometheus-community/kube-prometheus-stack` (Prometheus Operator, Prometheus, Alertmanager, Grafana, kube-state-metrics, node-exporter) через helm, values в `k8s/monitoring/values.yaml`.
 
-Отдельная проблема, с которой пришлось разбираться - часть образов чарта лежит на `quay.io`, который недоступен из сети УС (таймауты на всех нодах, не связано с конкретной зоной или конкретным registry - позже выяснилось, что и часть образов с `registry.k8s.io` тоже не тянется). Пробовал официальное зеркало Yandex `cr.yandex/mirror` - оно проксирует только официальные (library) образы Docker Hub, `bitnami/*` через него не идет. Пробовал целиком перейти на bitnami-чарты - у них тоже нет полного набора компонентов (нет Grafana в `bitnami/kube-prometheus`). В итоге проблемные образы (prometheus-operator, prometheus, alertmanager, prometheus-config-reloader, node-exporter, kube-state-metrics) вручную перезалиты в свой Container Registry под `cr.yandex/crpot29o0cam408r5p0d/mirror/*` и подставлены через `image.registry`/`image.repository` в values. admission-webhook отключен - тянул ещё один недоступный образ с ghcr.io и не нужен для базовой работы.
+Отдельная проблема, с которой пришлось разбираться - часть образов чарта лежит на `quay.io`, который недоступен из сети ЯО (таймауты на всех нодах, не связано с конкретной зоной или конкретным registry - позже выяснилось, что и часть образов с `registry.k8s.io` тоже не тянется). Пробовал официальное зеркало Yandex `cr.yandex/mirror` - оно проксирует только официальные (library) образы Docker Hub, `bitnami/*` через него не идет. Пробовал целиком перейти на bitnami-чарты - у них тоже нет полного набора компонентов (нет Grafana в `bitnami/kube-prometheus`). В итоге проблемные образы (prometheus-operator, prometheus, alertmanager, prometheus-config-reloader, node-exporter, kube-state-metrics) вручную перезалиты в свой Container Registry под `cr.yandex/crpot29o0cam408r5p0d/mirror/*` и подставлены через `image.registry`/`image.repository` в values. admission-webhook отключен - тянул еще один недоступный образ с ghcr.io и не нужен для базовой работы.
 
 Grafana:
 - `http://158.160.202.106` (LoadBalancer, порт 80)
@@ -66,7 +66,7 @@ Grafana:
 - `http://158.160.197.203` (LoadBalancer, порт 80)
 <img width="583" height="222" alt="image" src="https://github.com/user-attachments/assets/b9a44fbe-3aaf-4c6a-b7e6-3847a2d49ae6" />
 
-Важный нюанс по сети: LoadBalancer в managed k8s шлёт трафик не на порт 80 самой ноды, а на её NodePort (диапазон 30000-32767) - это нужно явно открыть в security group (`terraform-infra/network.tf`), иначе снаружи будет просто таймаут при живых и здоровых подах.
+Важный нюанс по сети: LoadBalancer в managed k8s шлет трафик не на порт 80 самой ноды, а на ее NodePort (диапазон 30000-32767) - это нужно явно открыть в security group (`terraform-infra/network.tf`), иначе снаружи будет просто таймаут при живых и здоровых подах.
 
 
 ## 5. CI/CD: terraform pipeline
