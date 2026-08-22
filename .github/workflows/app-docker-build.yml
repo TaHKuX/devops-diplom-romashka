@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
     tags: ["v*.*.*"]
+    paths:
+      - "app/**"
+      - ".github/workflows/app-docker-build.yml"
 
 env:
   REGISTRY: cr.yandex
