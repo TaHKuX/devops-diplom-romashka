@@ -1,3 +1,4 @@
+# основная vpc сеть кластера
 resource "yandex_vpc_network" "main" {
   name = "${var.prefix}-network"
 }
