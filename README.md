@@ -32,7 +32,7 @@ k8s/app/                манифесты Deployment/Service тестового
 
 ## 2. Kubernetes кластер
 
-Выбрал Managed Service for Kubernetes (альтернативный вариант из задания, без Kubespray). По заданию для managed k8s нужен региональный мастер с размещением нод в 3 подсетях - так и сделано (`yandex_kubernetes_cluster.main`, блок `master.regional` с location на каждую зону). Node group - 3 ноды, прерываемые (preemptible), минимальные ресурсы (2 vCPU, 20% core fraction, 2GB) - чтобы сэкономить бюджет купона, как и просили в задании.
+Выбрал Managed Service for Kubernetes. Node group - 3 ноды, прерываемые (preemptible), минимальные ресурсы (2 vCPU, 20% core fraction, 2GB) - чтобы сэкономить бюджет промика.
 
 ```
 yc managed-kubernetes cluster get-credentials cat39fdbe2lr0h0mbr94 --external --force
@@ -66,12 +66,10 @@ Grafana:
 - `http://158.160.197.203` (LoadBalancer, порт 80)
 <img width="583" height="222" alt="image" src="https://github.com/user-attachments/assets/b9a44fbe-3aaf-4c6a-b7e6-3847a2d49ae6" />
 
-Важный нюанс по сети: LoadBalancer в managed k8s шлет трафик не на порт 80 самой ноды, а на ее NodePort (диапазон 30000-32767) - это нужно явно открыть в security group (`terraform-infra/network.tf`), иначе снаружи будет просто таймаут при живых и здоровых подах.
-
 
 ## 5. CI/CD: terraform pipeline
 
-Вместо Atlantis/Terraform Cloud - альтернативный вариант из задания: GitHub Actions гоняет `terraform plan`/`apply` при каждом пуше в main, если менялась `terraform-infra/**` (`.github/workflows/terraform.yml`). На pull request - только `plan`, без apply.
+GitHub Actions гоняет `terraform plan`/`apply` при каждом пуше в main, если менялась `terraform-infra/**` (`.github/workflows/terraform.yml`). На pull request - только `plan`, без apply.
 
 Аутентификация: секрет `YC_SA_KEY_JSON` (ключ `terraform-sa`) - workflow сам получает свежий IAM-токен на каждый запуск (`yc iam create-token`), долгоживущий OAuth-токен в секретах не хранится.
 
@@ -115,7 +113,6 @@ kubectl apply -f ../k8s/app/deployment.yaml
 kubectl apply -f ../k8s/app/service.yaml
 ```
 
-Перед первым запуском мониторинга нужно перезалить образы с quay.io/registry.k8s.io в свой registry (см. раздел 4) - иначе поды встанут в ImagePullBackOff.
 
 ## Секреты для GitHub Actions
 
