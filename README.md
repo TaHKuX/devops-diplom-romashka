@@ -59,7 +59,7 @@ Registry - Yandex Container Registry, создан терраформом вме
 
 Grafana:
 - `http://158.160.202.106` (LoadBalancer, порт 80)
-- логин `admin`, пароль - см. `prometheus.prometheusSpec` / `grafana.adminPassword` в `k8s/monitoring/values.yaml` (сменить после первого входа)
+- логин\пароль отправил в сдаче задания
 <img width="1886" height="666" alt="image" src="https://github.com/user-attachments/assets/65c5515f-1466-4d6d-98f4-1fe3531d40ca" />
 
 Тестовое приложение:
